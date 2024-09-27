@@ -1,0 +1,162 @@
+args:
+  mode: inference
+  relay_model: False
+  load: "transformer"
+  batch_size: 4
+  grid_num_columns: 2
+  input_type: txt
+  input_file: "configs/test.txt"
+  bf16: True
+  force_inference: True
+  sampling_image_size_x: 2048
+  sampling_image_size_y: 2048
+  sampling_latent_dim: 16
+  output_dir: "outputs/cogview3_plus"
+  deepspeed_config: { }
+
+model:
+  scale_factor: 1
+  disable_first_stage_autocast: true
+  log_keys:
+    - txt
+
+  denoiser_config:
+    target: sgm.modules.diffusionmodules.denoiser.DiscreteDenoiser
+    params:
+      num_idx: 1000
+      quantize_c_noise: False
+
+      weighting_config:
+        target: sgm.modules.diffusionmodules.denoiser_weighting.EpsWeighting
+      scaling_config:
+        target: sgm.modules.diffusionmodules.denoiser_scaling.ZeroSNRScaling
+      discretization_config:
+        target: sgm.modules.diffusionmodules.discretizer.ZeroSNRDDPMDiscretization
+        params:
+          shift_scale: 4
+
+  network_config:
+    target: sgm.modules.diffusionmodules.dit.DiffusionTransformer
+    params:
+      in_channels: 16
+      out_channels: 16
+      hidden_size: 2560
+      num_layers: 30
+      patch_size: 2
+      block_size: 16
+      num_attention_heads: 64
+      text_length: 224
+      time_embed_dim: 512
+      num_classes: sequential
+      adm_in_channels: 1536
+
+      modules:
+        pos_embed_config:
+          target: sgm.modules.diffusionmodules.dit.PositionEmbeddingMixin
+          params:
+            max_height: 128
+            max_width: 128
+            max_length: 4096
+        patch_embed_config:
+          target: sgm.modules.diffusionmodules.dit.ImagePatchEmbeddingMixin
+          params:
+            text_hidden_size: 4096
+        attention_config:
+          target: sgm.modules.diffusionmodules.dit.AdalnAttentionMixin
+          params:
+            qk_ln: true
+        final_layer_config:
+          target: sgm.modules.diffusionmodules.dit.FinalLayerMixin
+
+  conditioner_config:
+    target: sgm.modules.GeneralConditioner
+    params:
+      emb_models:
+        # crossattn cond
+        - is_trainable: False
+          input_key: txt
+          target: sgm.modules.encoders.modules.FrozenT5Embedder
+          params:
+            model_dir: "google/t5-v1_1-xxl"
+            max_length: 224
+        # vector cond
+        - is_trainable: False
+          input_key: original_size_as_tuple
+          target: sgm.modules.encoders.modules.ConcatTimestepEmbedderND
+          params:
+            outdim: 256  # multiplied by two
+        # vector cond
+        - is_trainable: False
+          input_key: crop_coords_top_left
+          target: sgm.modules.encoders.modules.ConcatTimestepEmbedderND
+          params:
+            outdim: 256  # multiplied by two
+        # vector cond
+        - is_trainable: False
+          input_key: target_size_as_tuple
+          target: sgm.modules.encoders.modules.ConcatTimestepEmbedderND
+          params:
+            outdim: 256  # multiplied by two
+  
+  first_stage_config:
+    target: sgm.models.autoencoder.AutoencodingEngine
+    params:
+      ckpt_path: "vae/imagekl_ch16.pt"
+      monitor: val/rec_loss
+
+      loss_config:
+        target: torch.nn.Identity
+      
+      regularizer_config:
+        target: sgm.modules.autoencoding.regularizers.DiagonalGaussianRegularizer
+
+      encoder_config:
+        target: sgm.modules.diffusionmodules.model.Encoder
+        params:
+          attn_type: vanilla
+          double_z: true
+          z_channels: 16
+          resolution: 256
+          in_channels: 3
+          out_ch: 3
+          ch: 128
+          ch_mult: [ 1, 4, 8, 8 ]
+          num_res_blocks: 3
+          attn_resolutions: [ ]
+          mid_attn: False
+          dropout: 0.0
+      
+      decoder_config:
+        target: sgm.modules.diffusionmodules.model.Decoder
+        params:
+          attn_type: vanilla
+          double_z: true
+          z_channels: 16
+          resolution: 256
+          in_channels: 3
+          out_ch: 3
+          ch: 128
+          ch_mult: [ 1, 4, 8, 8 ]
+          num_res_blocks: 3
+          attn_resolutions: [ ]
+          mid_attn: False
+          dropout: 0.0
+
+  loss_fn_config:
+    target: torch.nn.Identity
+  
+  sampler_config:
+    target: sgm.modules.diffusionmodules.sampling.ZeroSNRDDIMSampler
+    params:
+      num_steps: 50
+      verbose: True
+
+      discretization_config:
+        target: sgm.modules.diffusionmodules.discretizer.ZeroSNRDDPMDiscretization
+        params:
+          shift_scale: 4
+
+      guider_config:
+        target: sgm.modules.diffusionmodules.guiders.VanillaCFG
+        params:
+          scale: 5

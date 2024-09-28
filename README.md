@@ -13,7 +13,7 @@
     👋 Join our <a href="resources/WECHAT.md" target="_blank">WeChat</a>
 </p>
 <p align="center">
-📍 Visit <a href="https://chatglm.cn/main/gdetail/65a232c082ff90a2ad2f15e2?fr=osm_cogvideox&lang=zh">Qingying</a> and <a href="https://open.bigmodel.cn/?utm_campaign=open&_channel_track_key=OWTVNma9">API Platform</a> for larger-scale commercial video generation models.
+📍 Visit <a href="https://chatglm.cn/main/gdetail/65a232c082ff90a2ad2f15e2?fr=osm_cogvideox&lang=zh">Qingyan</a> and <a href="https://open.bigmodel.cn/?utm_campaign=open&_channel_track_key=OWTVNma9">API Platform</a> for larger-scale commercial video generation models.
 </p>
 
 ## Project Updates
@@ -50,9 +50,9 @@ are participating in the development of the diffusers version.
     <td style="text-align: center;">Resolution</td>
     <td colspan="2" style="text-align: center;">512 * 512</td>
     <td style="text-align: center;">
-            \(512 \leq H, W \leq 2048 \)<br>
-            \(H \times W \leq 2^{21} \)<br>
-            \(H, W \mod 32 = 0 \)
+            512 <= H, W <= 2048 <br>
+            H * W <= 2^{21} <br>
+            H, W \mod 32 = 0
     </td>
   </tr>
   <tr>

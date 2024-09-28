@@ -49,9 +49,9 @@ Zero-SNR
     <td style="text-align: center;">分辨率</td>
     <td colspan="2" style="text-align: center;">512 * 512</td>
     <td style="text-align: center;">
-            \(512 \leq H, W \leq 2048 \)<br>
-            \(H \times W \leq 2^{21} \)<br>
-            \(H, W \mod 32 = 0 \)
+            512 <= H, W <= 2048 <br>
+            H * W <= 2^{21} <br>
+            H, W \mod 32 = 0
     </td>
   <tr>
     <td style="text-align: center;">推理精度</td>

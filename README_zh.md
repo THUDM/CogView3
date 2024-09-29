@@ -7,7 +7,7 @@
 </div>
 
 <p align="center">
-📚 查看 <a href="https://arxiv.org/abs/2408.05121" target="_blank">论文</a> 和 <a href="https://zhipu-ai.feishu.cn/wiki/DHCjw1TrJiTyeukfc9RceoSRnCh" target="_blank">使用文档</a>
+📚 查看 <a href="https://arxiv.org/abs/2403.05121" target="_blank">论文</a>
 </p>
 <p align="center">
     👋 加入我们的 <a href="resources/WECHAT.md" target="_blank">微信</a>

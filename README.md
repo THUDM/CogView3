@@ -7,7 +7,7 @@
 </div>
 
 <p align="center">
-📚 Check out the <a href="https://arxiv.org/abs/2408.05121" target="_blank">paper</a> and <a href="https://zhipu-ai.feishu.cn/wiki/DHCjw1TrJiTyeukfc9RceoSRnCh" target="_blank">documentation</a>
+📚 Check out the <a href="https://arxiv.org/abs/2403.05121" target="_blank">paper</a>
 </p>
 <p align="center">
     👋 Join our <a href="resources/WECHAT.md" target="_blank">WeChat</a>

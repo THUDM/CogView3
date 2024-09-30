@@ -1,4 +1,4 @@
-# SAT CogView3 & CogView-3-Plus
+# SAT CogView3 & CogView3-Plus
 
 [Read this in Chinese](./README_zh.md)
 
@@ -20,12 +20,12 @@ pip install -r requirements.txt
 
 The following links are for different model weights:
 
-### CogView-3-Plus-3B
+### CogView3-Plus-3B
 
 + transformer: https://cloud.tsinghua.edu.cn/d/f913eabd3f3b4e28857c
 + vae: https://cloud.tsinghua.edu.cn/d/af4cc066ce8a4cf2ab79
 
-### CogView-3-Base-3B
+### CogView3-Base-3B
 
 + transformer:
     + cogview3-base: https://cloud.tsinghua.edu.cn/d/242b66daf4424fa99bf0
@@ -36,7 +36,7 @@ The following links are for different model weights:
 
 + vae: https://cloud.tsinghua.edu.cn/d/c8b9497fc5124d71818a/ 
 
-### CogView-3-Base-3B-Relay
+### CogView3-Base-3B-Relay
 
 + transformer:
     + cogview3-relay: https://cloud.tsinghua.edu.cn/d/134951acced949c1a9e1/
@@ -45,12 +45,12 @@ The following links are for different model weights:
   
   **These three versions are interchangeable. Choose the one that suits your needs and run it with the corresponding configuration file.**
 
-+ vae: Same as CogView-3-Base-3B
++ vae: Same as CogView3-Base-3B
 
 Next, arrange the model files into the following format:
 
 ```
-.cogview3-plus-3b
+cogview3-plus-3b
 ├── transformer
 │   ├── 1
 │   │   └── mp_rank_00_model_states.pt
@@ -73,6 +73,7 @@ mv CogVideoX-2b/text_encoder/* CogVideoX-2b/tokenizer/* t5-v1_1-xxl
 With this setup, you will have a safetensor format T5 file, ensuring no errors during Deepspeed fine-tuning.
 
 ```
+t5-v1_1-xxl
 ├── added_tokens.json
 ├── config.json
 ├── model-00001-of-00002.safetensors
@@ -92,8 +93,8 @@ Here is an example using `CogView3-Base`, with explanations for some of the para
 ```yaml
 args:
   mode: inference
-  relay_model: False # Set to True when using CogView-3-Relay
-  load: "cogview3_base/transformer" # Path to the transformer folder
+  relay_model: False # Set to True when using CogView3-Relay
+  load: "cogview3-base-3b" # Path to the folder with latest
   batch_size: 8 # Number of images per inference
   grid_num_columns: 2 # Number of columns in grid.png output
   input_type: txt # Input can be from command line or TXT file
@@ -105,9 +106,9 @@ args:
   # sampling_image_size_x: 1024 (width)
   # sampling_image_size_y: 1024 (height)
 
-  output_dir: "outputs/cogview3_base-512x512"
-  # This section is for CogView-3-Relay. Set the input_dir to the folder with base model generated images.
-  # input_dir: "outputs/cogview3_base-512x512" 
+  output_dir: "outputs/cogview3_base_512x512"
+  # This section is for CogView3-Relay. Set the input_dir to the folder with base model generated images.
+  # input_dir: "outputs/cogview3_base_512x512" 
   deepspeed_config: { }
 
 model:
@@ -119,13 +120,14 @@ model:
         input_key: txt
         target: sgm.modules.encoders.modules.FrozenT5Embedder
         params:
-          model_dir: "google/t5-v1_1-xxl" # Path to T5 safetensors
+          model_dir: "t5-v1_1-xxl" # Path to T5 safetensors
           max_length: 225 # Maximum prompt length
 
   first_stage_config:
     target: sgm.models.autoencoder.AutoencodingEngine
     params:
-      ckpt_path: "cogview3_base/vae/imagekl_ch16.pt" # Path to VAE PT file
+      ckpt_path: "cogview3-base-3b-vae/sdxl_vae.safetensors" # Path to VAE file
+      # ckpt_path: "cogview3-plus-3b/vae/imagekl_ch16.pt" # Path to CogView3-Plus VAE PT file
       monitor: val/rec_loss
 ```
 
@@ -170,16 +172,18 @@ python sample_unet.py --base configs/cogview3_relay_distill_1step.yaml
 The output image format will be a folder. The folder name will consist of the sequence number and the first 15 characters of the prompt, containing multiple images. The number of images is based on the `batch` parameter. The structure should look like this:
 
 ```
-.
-├── 000000000.png
-├── 000000001.png
-├── 000000002.png
-├── 000000003.png
-├── 000000004.png
-├── 000000005.png
-├── 000000006.png
-├── 000000007.png
-└── grid.png
+outputs
+├── cogview3_base_512x512
+    ├── 0_
+        ├── 000000000.png
+        ├── 000000001.png
+        ├── 000000002.png
+        ├── 000000003.png
+        ├── 000000004.png
+        ├── 000000005.png
+        ├── 000000006.png
+        ├── 000000007.png
+        └── grid.png
 
 1 directory, 9 files
 ```

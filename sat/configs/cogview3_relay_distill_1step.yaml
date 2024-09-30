@@ -1,6 +1,7 @@
 args:
   mode: inference
-  load: "transformer"
+  relay_model: True
+  load: "cogview3-relay-3b-distill-1step"
   batch_size: 4
   grid_num_columns: 2
   input_type: txt
@@ -9,7 +10,7 @@ args:
   force_inference: True
   sampling_image_size: 1024 # 这个值应该是你输入的图像分辨率的两倍
   output_dir: "outputs/cogview3_relay_distill_1step"
-  input_dir: "inputs" # the inputs image should follow the order of input_file or cli input
+  input_dir: "outputs/cogview3_base_512x512" # the inputs image should follow the order of input_file or cli input
   deepspeed_config: { }
 
 model:
@@ -63,7 +64,7 @@ model:
           input_key: txt
           target: sgm.modules.encoders.modules.FrozenT5Embedder
           params:
-            model_dir: "google/t5-v1_1-xxl"
+            model_dir: "t5-v1_1-xxl"
             max_length: 225
         # vector cond
         - is_trainable: False
@@ -87,7 +88,7 @@ model:
   first_stage_config:
     target: sgm.models.autoencoder.AutoencoderKLInferenceWrapper
     params:
-      ckpt_path: "vae/sdxl_vae.safetensors"
+      ckpt_path: "cogview3-base-3b-vae/sdxl_vae.safetensors"
       embed_dim: 4
       monitor: val/rec_loss
       ddconfig:

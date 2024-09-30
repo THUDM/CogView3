@@ -1,7 +1,7 @@
 args:
   mode: inference
   relay_model: False
-  load: "transformer"
+  load: "cogview3-base-3b-distill-4step"
   batch_size: 4
   grid_num_columns: 2
   input_type: txt
@@ -9,7 +9,7 @@ args:
   fp16: True
   force_inference: True
   sampling_image_size: 512
-  output_dir: "outputs/cogview3_base_distill-4step"
+  output_dir: "outputs/cogview3_base_distill_4step"
   deepspeed_config: {}
 
 model:
@@ -61,7 +61,7 @@ model:
             input_key: txt
             target: sgm.modules.encoders.modules.FrozenT5Embedder
             params:
-              model_dir: "google/t5-v1_1-xxl"
+              model_dir: "t5-v1_1-xxl"
               max_length: 225
 
           # vector cond
@@ -86,7 +86,7 @@ model:
   first_stage_config:
     target: sgm.models.autoencoder.AutoencoderKLInferenceWrapper
     params:
-      ckpt_path: "vae/sdxl_vae.safetensors"
+      ckpt_path: "cogview3-base-3b-vae/sdxl_vae.safetensors"
       embed_dim: 4
       monitor: val/rec_loss
       ddconfig:

@@ -1,7 +1,7 @@
 args:
   mode: inference
   relay_model: False
-  load: "transformer"
+  load: "cogview3-plus-3b/transformer"
   batch_size: 4
   grid_num_columns: 2
   input_type: txt
@@ -77,7 +77,7 @@ model:
           input_key: txt
           target: sgm.modules.encoders.modules.FrozenT5Embedder
           params:
-            model_dir: "google/t5-v1_1-xxl"
+            model_dir: "t5-v1_1-xxl"
             max_length: 224
         # vector cond
         - is_trainable: False
@@ -101,7 +101,7 @@ model:
   first_stage_config:
     target: sgm.models.autoencoder.AutoencodingEngine
     params:
-      ckpt_path: "vae/imagekl_ch16.pt"
+      ckpt_path: "cogview3-plus-3b/vae/imagekl_ch16.pt"
       monitor: val/rec_loss
 
       loss_config:

@@ -28,9 +28,9 @@ The following links are for different model weights:
 ### CogView3-Base-3B
 
 + transformer:
-    + cogview3-base: https://cloud.tsinghua.edu.cn/d/242b66daf4424fa99bf0
-    + cogview3-base-distill-4step: https://cloud.tsinghua.edu.cn/d/d10032a94db647f5aa0e
-    + cogview3-base-distill-8step: https://cloud.tsinghua.edu.cn/d/1598d4fe4ebf4afcb6ae
+    + cogview3-base-3b: https://cloud.tsinghua.edu.cn/d/242b66daf4424fa99bf0
+    + cogview3-base-3b-distill-4step: https://cloud.tsinghua.edu.cn/d/d10032a94db647f5aa0e
+    + cogview3-base-3b-distill-8step: https://cloud.tsinghua.edu.cn/d/1598d4fe4ebf4afcb6ae
   
   **These three versions are interchangeable. Choose the one that suits your needs and run it with the corresponding configuration file.**
 
@@ -39,9 +39,9 @@ The following links are for different model weights:
 ### CogView3-Base-3B-Relay
 
 + transformer:
-    + cogview3-relay: https://cloud.tsinghua.edu.cn/d/134951acced949c1a9e1/
-    + cogview3-relay-distill-2step: https://cloud.tsinghua.edu.cn/d/6a902976fcb94ac48402
-    + cogview3-relay-distill-1step: https://cloud.tsinghua.edu.cn/d/4d50ec092c64418f8418/
+    + cogview3-relay-3b: https://cloud.tsinghua.edu.cn/d/134951acced949c1a9e1/
+    + cogview3-relay-3b-distill-2step: https://cloud.tsinghua.edu.cn/d/6a902976fcb94ac48402
+    + cogview3-relay-3b-distill-1step: https://cloud.tsinghua.edu.cn/d/4d50ec092c64418f8418/
   
   **These three versions are interchangeable. Choose the one that suits your needs and run it with the corresponding configuration file.**
 
@@ -57,6 +57,12 @@ cogview3-plus-3b
 │   └── latest
 └── vae
     └── imagekl_ch16.pt
+cogview3-base-3b
+├── 1
+│   └──mp_rank_00_model_states.pt
+└──latest
+cogview3-base-3b-vae
+└──sdxl_vae.safetensors
 ```
 
 Clone the T5 model. This model is not used for training or fine-tuning but is necessary. You can download the T5 model separately, but it must be in `safetensors` format, not `bin` format (otherwise an error may occur).
@@ -173,8 +179,8 @@ The output image format will be a folder. The folder name will consist of the se
 
 ```
 outputs
-├── cogview3_base_512x512
-    ├── 0_
+└── cogview3_base_512x512
+    └── 0_
         ├── 000000000.png
         ├── 000000001.png
         ├── 000000002.png

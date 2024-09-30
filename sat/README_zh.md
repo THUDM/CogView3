@@ -26,9 +26,9 @@ pip install -r requirements.txt
 ### CogView3-Base-3B
 
 + transformer:
-    + cogview3-base: https://cloud.tsinghua.edu.cn/d/242b66daf4424fa99bf0
-    + cogview3-base-distill-4step: https://cloud.tsinghua.edu.cn/d/d10032a94db647f5aa0e
-    + cogview3-base-distill-8step: https://cloud.tsinghua.edu.cn/d/1598d4fe4ebf4afcb6ae
+    + cogview3-base-3b: https://cloud.tsinghua.edu.cn/d/242b66daf4424fa99bf0
+    + cogview3-base-3b-distill-4step: https://cloud.tsinghua.edu.cn/d/d10032a94db647f5aa0e
+    + cogview3-base-3b-distill-8step: https://cloud.tsinghua.edu.cn/d/1598d4fe4ebf4afcb6ae
     + 
   **以上三个版本为替换关系，选择适合自己的版本和对应的配置文件进行运行**
 
@@ -37,9 +37,9 @@ pip install -r requirements.txt
 ### CogView3-Base-3B-Relay
 
 + transformer:
-    + cogview3-relay: https://cloud.tsinghua.edu.cn/d/134951acced949c1a9e1/
-    + cogview3-relay-distill-2step: https://cloud.tsinghua.edu.cn/d/6a902976fcb94ac48402
-    + cogview3-relay-distill-1step: https://cloud.tsinghua.edu.cn/d/4d50ec092c64418f8418/
+    + cogview3-relay-3b: https://cloud.tsinghua.edu.cn/d/134951acced949c1a9e1/
+    + cogview3-relay-3b-distill-2step: https://cloud.tsinghua.edu.cn/d/6a902976fcb94ac48402
+    + cogview3-relay-3b-distill-1step: https://cloud.tsinghua.edu.cn/d/4d50ec092c64418f8418/
   
   **以上三个版本为替换关系，选择适合自己的版本和对应的配置文件进行运行**
 
@@ -55,6 +55,12 @@ cogview3-plus-3b
 │   └── latest
 └── vae
     └── imagekl_ch16.pt
+cogview3-base-3b
+├── 1
+│   └──mp_rank_00_model_states.pt
+└──latest
+cogview3-base-3b-vae
+└──sdxl_vae.safetensors
 ```
 
 克隆 T5 模型，该模型不用做训练和微调，但是必须使用。这里，您可以单独下载T5模型，必须是`safetensors`类型，不能是`bin`
@@ -173,8 +179,8 @@ python sample_unet.py --base configs/cogview3_relay_distill_1step.yaml
 
 ```
 outputs
-├── cogview3_base_512x512
-    ├── 0_
+└── cogview3_base_512x512
+    └── 0_
         ├── 000000000.png
         ├── 000000001.png
         ├── 000000002.png

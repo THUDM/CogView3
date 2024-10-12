@@ -5,7 +5,9 @@
 <div align="center">
 <img src=resources/logo.svg width="50%"/>
 </div>
-
+<p align="center">
+在 <a href="https://huggingface.co/spaces/THUDM-HF-SPACE/CogView3-Plus-3B-Space" target="_blank"> 🤗 Huggingface Space</a> 在线体验 CogView3-Plus-3B 模型
+</p>
 <p align="center">
 📚 查看 <a href="https://arxiv.org/abs/2403.05121" target="_blank">论文</a>
 </p>
@@ -13,11 +15,13 @@
     👋 加入我们的 <a href="resources/WECHAT.md" target="_blank">微信</a>
 </p>
 <p align="center">
-📍 前往<a href="https://chatglm.cn/main/gdetail/65a232c082ff90a2ad2f15e2?fr=osm_cogvideox&lang=zh"> 清影</a> 和 <a href="https://open.bigmodel.cn/?utm_campaign=open&_channel_track_key=OWTVNma9"> API平台</a> 体验更大规模的商业版视频生成模型。
+📍 前往<a href="https://chatglm.cn/main/gdetail/65a232c082ff90a2ad2f15e2?fr=osm_cogvideox&lang=zh"> 清言 </a> 和 <a href="https://open.bigmodel.cn/?utm_campaign=open&_channel_track_key=OWTVNma9"> API平台</a> 体验更大规模的商业版视频生成模型。
 </p>
 
 ## 项目更新
 
+- 🔥🔥 ```2024/10/13```: 我们适配和开源了 [diffusers](https://github.com/huggingface/diffusers) 版本的  **CogView-3Plus-3B**
+  模型。你可以前往[在线体验](https://huggingface.co/spaces/THUDM-HF-SPACE/CogView3-Plus-3B-Space)。
 - 🔥 ```2024/9/29```: 我们已经开源了 **CogView3**  以及 **CogView-3Plus-3B** 。**CogView3** 是一个基于级联扩散的文本生成图像系统，采用了接力扩散框架。
   **CogView-3Plus** 是一系列新开发的基 Diffusion Transformer 的文本生成图像模型。
 
@@ -77,6 +81,11 @@ Zero-SNR
     <td style="text-align: center;">下载链接 (SAT)</td>
     <td colspan="3" style="text-align: center;"><a href="./sat/README.md">SAT</a></td>
   </tr>
+  <tr>
+    <td style="text-align: center;">下载链接 (Diffusers)</td>
+    <td colspan="2"  style="text-align: center;"> 未适配 </td>
+    <td style="text-align: center;"><a href="https://huggingface.co/THUDM/CogView3-Plus-3B">🤗 HuggingFace</a><br><a href="https://modelscope.cn/models/ZhipuAI/CogView3-Plus-3B">🤖 ModelScope</a><br><a href="https://wisemodel.cn/models/ZhipuAI/CogView3-Plus-3B">🟣 WiseModel</a></td>
+  </tr>
 
 </table>
 
@@ -99,6 +108,41 @@ Zero-SNR
 python prompt_optimize.py --api_key "智谱AI API Key" --prompt {你的提示词} --base_url "https://open.bigmodel.cn/api/paas/v4" --model "glm-4-plus"
 ```
 
+### 推理模型(Diffusers)
+
+首先，确保从源代码安装`diffusers`库。
+
+```shell
+pip install git+https://github.com/huggingface/diffusers.git
+```
+接着，运行以下代码：
+
+```python
+from diffusers import CogView3PlusPipeline
+import torch
+
+pipe = CogView3PlusPipeline.from_pretrained("THUDM/CogView3-Plus-3B", torch_dtype=torch.float16).to("cuda")
+
+# Open it for reduce GPU memory usage
+pipe.enable_model_cpu_offload()
+pipe.vae.enable_slicing()
+pipe.vae.enable_tiling()
+
+prompt = "A vibrant cherry red sports car sits proudly under the gleaming sun, its polished exterior smooth and flawless, casting a mirror-like reflection. The car features a low, aerodynamic body, angular headlights that gaze forward like predatory eyes, and a set of black, high-gloss racing rims that contrast starkly with the red. A subtle hint of chrome embellishes the grille and exhaust, while the tinted windows suggest a luxurious and private interior. The scene conveys a sense of speed and elegance, the car appearing as if it's about to burst into a sprint along a coastal road, with the ocean's azure waves crashing in the background."
+image = pipe(
+    prompt=prompt,
+    guidance_scale=7.0,
+    num_images_per_prompt=1,
+    num_inference_steps=50,
+    width=1024,
+    height=1024,
+).images[0]
+
+image.save("cogview3.png")
+```
+
+更多推理代码，请关注[inference](inference/cli_demo.py),该文件夹还包含一个Gradio封装的简单WEBUI代码。
+
 ### 推理模型 (SAT)
 
 请查看 [sat](sat/README_zh.md) 手把手教程实现模型推理。
@@ -107,8 +151,10 @@ python prompt_optimize.py --api_key "智谱AI API Key" --prompt {你的提示词
 
 由于项目处于初步阶段，我们正在制作以下内容：
 
-+ [ ] SAT版本的模型微调，包括SFT和Lora微调
-+ [ ] Diffuser库版本模型的推理，微调
++ [ ] CogView3-Plus-3B SAT版本的模型微调，包括SFT和Lora微调
++ [X] CogView3-Plus-3B Diffuser库版本模型的推理
++ [ ] CogView3-Plus-3B Diffuser库版本模型的微调
++ [ ] CogView3-Plus-3B 模型相关周边，包括ControlNet等工作。
 
 ## CogView3（ECCV'24）
 

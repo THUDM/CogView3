@@ -136,7 +136,7 @@ Different models require different code for inference. Here are the inference co
 ### CogView-3Plus
 
 ```shell
-  python sample_dit.py --base configs/cogview3_plus.yaml
+python sample_dit.py --base configs/cogview3_plus.yaml
 ```
 
 ### CogView-3-Base

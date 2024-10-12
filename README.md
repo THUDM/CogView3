@@ -7,6 +7,9 @@
 </div>
 
 <p align="center">
+Experience the CogView3-Plus-3B model online on <a href="https://huggingface.co/spaces/THUDM-HF-SPACE/CogView3-Plus-3B-Space" target="_blank"> 🤗 Huggingface Space</a>
+</p>
+<p align="center">
 📚 Check out the <a href="https://arxiv.org/abs/2403.05121" target="_blank">paper</a>
 </p>
 <p align="center">
@@ -18,9 +21,8 @@
 
 ## Project Updates
 
-- 🔥 ```2024/9/29```: We have open-sourced **CogView3** and **CogView-3Plus-3B**. **CogView3** is a text-to-image system
-  based on cascaded diffusion, using a relay diffusion framework.
-  **CogView-3Plus** is a new series of text-to-image models based on Diffusion Transformers.
+- 🔥🔥 ```2024/10/13```: We have adapted and open-sourced the **CogView-3Plus-3B** model in the [diffusers](https://github.com/huggingface/diffusers) version. You can [experience it online](https://huggingface.co/spaces/THUDM-HF-SPACE/CogView3-Plus-3B-Space).
+- 🔥 ```2024/9/29```: We have open-sourced **CogView3** and **CogView-3Plus-3B**. **CogView3** is a text-to-image system based on cascaded diffusion, utilizing a relay diffusion framework. **CogView-3Plus** is a series of newly developed text-to-image models based on Diffusion Transformers.
 
 ## Model Introduction
 
@@ -79,6 +81,15 @@ are participating in the development of the diffusers version.
     <td style="text-align: center;">Download Link (SAT)</td>
     <td colspan="3" style="text-align: center;"><a href="./sat/README.md">SAT</a></td>
   </tr>
+  <tr>
+    <td style="text-align: center;">Download Link (Diffusers)</td>
+    <td colspan="2" style="text-align: center;">Not Adapted</td>
+    <td style="text-align: center;">
+        <a href="https://huggingface.co/THUDM/CogView3-Plus-3B">🤗 HuggingFace</a><br>
+        <a href="https://modelscope.cn/models/ZhipuAI/CogView3-Plus-3B">🤖 ModelScope</a><br>
+        <a href="https://wisemodel.cn/models/ZhipuAI/CogView3-Plus-3B">🟣 WiseModel</a>
+    </td>
+</tr>
 </table>
 
 **Data Explanation**
@@ -103,6 +114,41 @@ We provide an [example script](prompt_optimize.py). We suggest running this scri
 python prompt_optimize.py --api_key "Zhipu AI API Key" --prompt {your prompt} --base_url "https://open.bigmodel.cn/api/paas/v4" --model "glm-4-plus"
 ```
 
+### Inference Model (Diffusers)
+
+First, ensure the `diffusers` library is installed **from source**. 
+```
+pip install git+https://github.com/huggingface/diffusers.git
+```
+
+Then, run the following code:
+
+```python
+from diffusers import CogView3PlusPipeline
+import torch
+
+pipe = CogView3PlusPipeline.from_pretrained("THUDM/CogView3-Plus-3B", torch_dtype=torch.float16).to("cuda")
+
+# Enable it to reduce GPU memory usage
+pipe.enable_model_cpu_offload()
+pipe.vae.enable_slicing()
+pipe.vae.enable_tiling()
+
+prompt = "A vibrant cherry red sports car sits proudly under the gleaming sun, its polished exterior smooth and flawless, casting a mirror-like reflection. The car features a low, aerodynamic body, angular headlights that gaze forward like predatory eyes, and a set of black, high-gloss racing rims that contrast starkly with the red. A subtle hint of chrome embellishes the grille and exhaust, while the tinted windows suggest a luxurious and private interior. The scene conveys a sense of speed and elegance, the car appearing as if it's about to burst into a sprint along a coastal road, with the ocean's azure waves crashing in the background."
+image = pipe(
+    prompt=prompt,
+    guidance_scale=7.0,
+    num_images_per_prompt=1,
+    num_inference_steps=50,
+    width=1024,
+    height=1024,
+).images[0]
+
+image.save("cogview3.png")
+```
+
+For more inference code, please refer to [inference](inference/cli_demo.py). This folder also contains a simple WEBUI code wrapped with Gradio.
+
 ### Inference Model (SAT)
 
 Please check the [sat](sat/README.md) tutorial for step-by-step instructions on model inference.
@@ -111,8 +157,10 @@ Please check the [sat](sat/README.md) tutorial for step-by-step instructions on 
 
 Since the project is in its early stages, we are working on the following:
 
-+ [ ] SAT version model fine-tuning, including SFT and Lora fine-tuning
-+ [ ] Diffuser library version model reasoning, fine-tuning
++ [ ] Fine-tuning the SAT version of CogView3-Plus-3B, including SFT and LoRA fine-tuning
++ [X] Inference with the Diffusers library version of the CogView3-Plus-3B model
++ [ ] Fine-tuning the Diffusers library version of the CogView3-Plus-3B model
++ [ ] Related work for the CogView3-Plus-3B model, including ControlNet and other tasks.
 
 ## CogView3 (ECCV'24)
 

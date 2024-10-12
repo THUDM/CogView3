@@ -1,22 +1,17 @@
-import os
-from contextlib import contextmanager
 from omegaconf import DictConfig
 from functools import partial
-from einops import rearrange, repeat
+from einops import rearrange
 import numpy as np
 
 import torch
 from torch import nn
 import torch.distributed
-import torch.nn.functional as F
 
 from sat.model.base_model import BaseModel
 from sat.model.mixins import BaseMixin
 from sat.ops.layernorm import LayerNorm
 from sat.transformer_defaults import HOOKS_DEFAULT, attention_fn_default
 from sat.mpu.utils import split_tensor_along_last_dim
-
-from sgm.modules.diffusionmodules.wrappers import OPENAIUNETWRAPPER
 from sgm.util import (
     disabled_train,
     instantiate_from_config,
@@ -48,12 +43,12 @@ def unpatchify(x, channels, patch_size, height, width):
 
 class ImagePatchEmbeddingMixin(BaseMixin):
     def __init__(
-        self,
-        in_channels,
-        hidden_size,
-        patch_size,
-        text_hidden_size=None,
-        do_rearrange=True,
+            self,
+            in_channels,
+            hidden_size,
+            patch_size,
+            text_hidden_size=None,
+            do_rearrange=True,
     ):
         super().__init__()
         self.in_channels = in_channels
@@ -62,7 +57,7 @@ class ImagePatchEmbeddingMixin(BaseMixin):
         self.text_hidden_size = text_hidden_size
         self.do_rearrange = do_rearrange
 
-        self.proj = nn.Linear(in_channels * patch_size**2, hidden_size)
+        self.proj = nn.Linear(in_channels * patch_size ** 2, hidden_size)
         if text_hidden_size is not None:
             self.text_proj = nn.Linear(text_hidden_size, hidden_size)
 
@@ -127,7 +122,7 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
     assert embed_dim % 2 == 0
     omega = np.arange(embed_dim // 2, dtype=np.float64)
     omega /= embed_dim / 2.0
-    omega = 1.0 / 10000**omega  # (D/2,)
+    omega = 1.0 / 10000 ** omega  # (D/2,)
 
     pos = pos.reshape(-1)  # (M,)
     out = np.einsum("m,d->md", pos, omega)  # (M, D/2), outer product
@@ -141,13 +136,13 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
 
 class PositionEmbeddingMixin(BaseMixin):
     def __init__(
-        self,
-        max_height,
-        max_width,
-        hidden_size,
-        text_length=0,
-        block_size=16,
-        **kwargs,
+            self,
+            max_height,
+            max_width,
+            hidden_size,
+            text_length=0,
+            block_size=16,
+            **kwargs,
     ):
         super().__init__()
         self.max_height = max_height
@@ -188,15 +183,15 @@ class PositionEmbeddingMixin(BaseMixin):
 
 class FinalLayerMixin(BaseMixin):
     def __init__(
-        self,
-        hidden_size,
-        time_embed_dim,
-        patch_size,
-        block_size,
-        out_channels,
-        elementwise_affine=False,
-        eps=1e-6,
-        do_unpatchify=True,
+            self,
+            hidden_size,
+            time_embed_dim,
+            patch_size,
+            block_size,
+            out_channels,
+            elementwise_affine=False,
+            eps=1e-6,
+            do_unpatchify=True,
     ):
         super().__init__()
         self.hidden_size = hidden_size
@@ -214,7 +209,7 @@ class FinalLayerMixin(BaseMixin):
             nn.SiLU(),
             nn.Linear(time_embed_dim, 2 * hidden_size),
         )
-        self.linear = nn.Linear(hidden_size, out_channels * patch_size**2)
+        self.linear = nn.Linear(hidden_size, out_channels * patch_size ** 2)
 
     def final_forward(self, logits, emb, text_length, target_size=None, **kwargs):
         x = logits[:, text_length:]
@@ -225,7 +220,7 @@ class FinalLayerMixin(BaseMixin):
         if self.do_unpatchify:
             target_height, target_width = target_size[0]
             assert (
-                target_height % self.block_size == 0 and target_width % self.block_size == 0
+                    target_height % self.block_size == 0 and target_width % self.block_size == 0
             ), "target size must be divisible by block size"
             out_height, out_width = (
                 target_height // self.block_size * self.patch_size,
@@ -243,14 +238,14 @@ class FinalLayerMixin(BaseMixin):
 
 class AdalnAttentionMixin(BaseMixin):
     def __init__(
-        self,
-        hidden_size,
-        num_layers,
-        time_embed_dim,
-        qk_ln=True,
-        hidden_size_head=None,
-        elementwise_affine=False,
-        eps=1e-6,
+            self,
+            hidden_size,
+            num_layers,
+            time_embed_dim,
+            qk_ln=True,
+            hidden_size_head=None,
+            elementwise_affine=False,
+            eps=1e-6,
     ):
         super().__init__()
 
@@ -274,14 +269,14 @@ class AdalnAttentionMixin(BaseMixin):
             )
 
     def layer_forward(
-        self,
-        hidden_states,
-        mask,
-        text_length,
-        layer_id,
-        emb,
-        *args,
-        **kwargs,
+            self,
+            hidden_states,
+            mask,
+            text_length,
+            layer_id,
+            emb,
+            *args,
+            **kwargs,
     ):
         layer = self.transformer.layers[layer_id]
         adaln_module = self.adaln_modules[layer_id]
@@ -400,25 +395,24 @@ str_to_dtype = {"fp32": torch.float32, "fp16": torch.float16, "bf16": torch.bflo
 
 class DiffusionTransformer(BaseModel):
     def __init__(
-        self,
-        in_channels,
-        out_channels,
-        hidden_size,
-        patch_size,
-        num_layers,
-        num_attention_heads,
-        text_length,
-        time_embed_dim=None,
-        num_classes=None,
-        adm_in_channels=None,
-        modules={},
-        dtype="fp32",
-        layernorm_order="pre",
-        activation_func=None,
-        elementwise_affine=False,
-        parallel_output=True,
-        block_size=16,
-        **kwargs,
+            self,
+            in_channels,
+            out_channels,
+            hidden_size,
+            patch_size,
+            num_layers,
+            num_attention_heads,
+            text_length,
+            time_embed_dim=None,
+            num_classes=None,
+            adm_in_channels=None,
+            modules={},
+            dtype="fp32",
+            layernorm_order="pre",
+            elementwise_affine=False,
+            parallel_output=True,
+            block_size=16,
+            **kwargs,
     ):
         self.model_channels = hidden_size
         self.time_embed_dim = time_embed_dim if time_embed_dim is not None else hidden_size
@@ -428,11 +422,10 @@ class DiffusionTransformer(BaseModel):
         self.block_size = block_size
         self.dtype = str_to_dtype[dtype]
 
-        hidden_size_head = hidden_size // num_attention_heads
+        hidden_size_head = hidden_size // num_attention_heads  # 40
 
-        if activation_func is None:
-            approx_gelu = nn.GELU(approximate="tanh")
-            activation_func = approx_gelu
+        approx_gelu = nn.GELU(approximate="tanh")
+        activation_func = approx_gelu
 
         transformer_args = {
             "vocab_size": 1,
@@ -463,32 +456,14 @@ class DiffusionTransformer(BaseModel):
             linear(time_embed_dim, time_embed_dim),
         )
 
-        if self.num_classes is not None:
-            if isinstance(self.num_classes, int):
-                self.label_emb = nn.Embedding(self.num_classes, time_embed_dim)
-            elif self.num_classes == "continuous":
-                print("setting up linear c_adm embedding layer")
-                self.label_emb = nn.Linear(1, time_embed_dim)
-            elif self.num_classes == "timestep":
-                self.label_emb = nn.Sequential(
-                    Timestep(model_channels),
-                    nn.Sequential(
-                        linear(model_channels, time_embed_dim),
-                        nn.SiLU(),
-                        linear(time_embed_dim, time_embed_dim),
-                    ),
-                )
-            elif self.num_classes == "sequential":
-                assert self.adm_in_channels is not None
-                self.label_emb = nn.Sequential(
-                    nn.Sequential(
-                        linear(self.adm_in_channels, time_embed_dim),
-                        nn.SiLU(),
-                        linear(time_embed_dim, time_embed_dim),
-                    )
-                )
-            else:
-                raise ValueError()
+        assert self.adm_in_channels is not None
+        self.label_emb = nn.Sequential(
+            nn.Sequential(
+                linear(self.adm_in_channels, time_embed_dim),
+                nn.SiLU(),
+                linear(time_embed_dim, time_embed_dim),
+            )
+        )
 
         pos_embed_config = modules.get(
             "pos_embed_config",
@@ -551,17 +526,13 @@ class DiffusionTransformer(BaseModel):
         self.add_mixin("final_layer", final_layer_mixin, reinit=True)
 
     def forward(self, x, timesteps=None, context=None, y=None, **kwargs):
+
         x = x.to(self.dtype)
-        assert (y is not None) == (
-            self.num_classes is not None
-        ), "must specify y if and only if the model is class-conditional"
         t_emb = timestep_embedding(timesteps, self.model_channels, repeat_only=False, dtype=self.dtype)
         emb = self.time_embed(t_emb)
 
-        if self.num_classes is not None:
-            assert y.shape[0] == x.shape[0]
-            emb = emb + self.label_emb(y)
-
+        assert y.shape[0] == x.shape[0]
+        emb = emb + self.label_emb(y)
         input_ids = position_ids = attention_mask = torch.ones((1, 1)).to(x.dtype)
 
         output = super().forward(

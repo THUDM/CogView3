@@ -18,9 +18,13 @@ from diffusers import CogView3PlusPipeline
 import torch
 from openai import OpenAI
 
+import gc
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 pipe = CogView3PlusPipeline.from_pretrained("THUDM/CogView3-Plus-3B", torch_dtype=torch.bfloat16).to(device)
+
+os.makedirs("./gradio_tmp", exist_ok=True)
 
 
 def clean_string(s):
@@ -137,6 +141,10 @@ def infer(
     num_inference_steps,
     progress=gr.Progress(track_tqdm=True),
 ):
+    gc.collect()
+    torch.cuda.empty_cache()
+    torch.cuda.ipc_collect()
+    
     if randomize_seed:
         seed = random.randint(0, 65536)
 

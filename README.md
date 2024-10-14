@@ -7,8 +7,10 @@
 </div>
 
 <p align="center">
-Experience the CogView3-Plus-3B model online on <a href="https://huggingface.co/spaces/THUDM-HF-SPACE/CogView3-Plus-3B-Space" target="_blank"> 🤗 Huggingface Space</a>
-</p>
+Try out the CogView3-Plus-3B model online on <a href="https://huggingface.co/spaces/THUDM-HF-SPACE/CogView3-Plus-3B-Space" target="_blank"> 🤗 Huggingface Space</a> and 
+<a href="https://replicate.com/chenxwh/cogview3" target="_blank">
+    <img src="https://replicate.com/chenxwh/cogview3/badge" alt="Replicate">
+</p> 
 <p align="center">
 📚 Check out the <a href="https://arxiv.org/abs/2403.05121" target="_blank">paper</a>
 </p>
@@ -21,7 +23,7 @@ Experience the CogView3-Plus-3B model online on <a href="https://huggingface.co/
 
 ## Project Updates
 
-- 🔥🔥 ```2024/10/13```: We have adapted and open-sourced the **CogView-3Plus-3B** model in the [diffusers](https://github.com/huggingface/diffusers) version. You can [experience it online](https://huggingface.co/spaces/THUDM-HF-SPACE/CogView3-Plus-3B-Space).
+- 🔥🔥 ```2024/10/13```: We have adapted and open-sourced the **CogView-3Plus-3B** model in the [diffusers](https://github.com/huggingface/diffusers) version. You can try it out on [Spaces](https://huggingface.co/spaces/THUDM-HF-SPACE/CogView3-Plus-3B-Space) or [Replicate](https://replicate.com/chenxwh/cogview3/).
 - 🔥 ```2024/9/29```: We have open-sourced **CogView3** and **CogView-3Plus-3B**. **CogView3** is a text-to-image system based on cascaded diffusion, utilizing a relay diffusion framework. **CogView-3Plus** is a series of newly developed text-to-image models based on Diffusion Transformers.
 
 ## Model Introduction

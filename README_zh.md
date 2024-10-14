@@ -33,9 +33,6 @@ Zero-SNR
 使用潜在维度为 16 的 VAE。
 
 下表显示了我们目前提供的文本生成图像模型列表及其基础信息。
-目前，所有模型都仅有 [SAT](https://github.com/THUDM/SwissArmyTransformer) 版本，但是我们会参与到 diffusers 版本的制作。
-
-版本。
 
 <table style="border-collapse: collapse; width: 100%;">
   <tr>

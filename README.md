@@ -32,8 +32,6 @@ mechanism. Compared to the commonly used MMDiT structure, it effectively reduces
 maintaining the model's basic capabilities. CogView-3Plus utilizes a VAE with a latent dimension of 16.
 
 The table below shows the list of text-to-image models we currently offer along with their basic information.
-At present, all models are only available in the [SAT](https://github.com/THUDM/SwissArmyTransformer) version, but we
-are participating in the development of the diffusers version.
 
 <table style="border-collapse: collapse; width: 100%;">
   <tr>

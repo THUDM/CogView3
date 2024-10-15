@@ -4,3 +4,5 @@ gradio>=5.0.2
 accelerate>=1.0.0
 diffusers
 sentencepiece>=0.2.0
+torch>=2.4.1
+openai

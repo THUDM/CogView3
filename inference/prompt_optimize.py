@@ -1,7 +1,16 @@
 import argparse
+import os
 import re
 
 from openai import OpenAI
+
+
+# Provider presets: each maps to (base_url, default_model)
+PROVIDER_PRESETS = {
+    "zhipu": ("https://open.bigmodel.cn/api/paas/v4", "glm-4-plus"),
+    "minimax": ("https://api.minimax.io/v1", "MiniMax-M2.7"),
+    "openai": ("https://api.openai.com/v1", "gpt-4o"),
+}
 
 
 def clean_string(s):
@@ -26,10 +35,14 @@ def convert_prompt(
             }
         ]
     )
+    # MiniMax requires temperature in (0.0, 1.0]
+    temperature = 0.01
+    if "minimax" in base_url.lower():
+        temperature = max(temperature, 0.01)
     response = client.chat.completions.create(
         messages=messages,
         model=model,
-        temperature=0.01,
+        temperature=temperature,
         top_p=0.7,
         stream=False,
         max_tokens=300,
@@ -145,10 +158,17 @@ def get_user_assistant_pairs(cogview_version: str) -> list:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--api_key", type=str, help="API key")
+    parser.add_argument("--api_key", type=str, help="API key (or set OPENAI_API_KEY / MINIMAX_API_KEY env var)")
     parser.add_argument("--prompt", type=str, help="Prompt to upsample")
-    parser.add_argument("--base_url", type=str, default="https://open.bigmodel.cn/api/paas/v4", help="Base URL")
-    parser.add_argument("--model", type=str, default="glm-4-plus", help="LLM using for upsampling")
+    parser.add_argument(
+        "--provider",
+        type=str,
+        choices=list(PROVIDER_PRESETS.keys()),
+        default=None,
+        help="LLM provider preset (zhipu, minimax, openai). Overrides --base_url and --model defaults.",
+    )
+    parser.add_argument("--base_url", type=str, default=None, help="Base URL (overrides provider preset)")
+    parser.add_argument("--model", type=str, default=None, help="LLM model name (overrides provider preset)")
     parser.add_argument(
         "--cogview_version",
         type=str,
@@ -157,13 +177,28 @@ if __name__ == "__main__":
         help="Choose the version of CogView (cogview3 or cogview4)",
     )
     args = parser.parse_args()
+
+    # Resolve provider preset, then allow explicit overrides
+    provider = args.provider or "zhipu"
+    preset_base_url, preset_model = PROVIDER_PRESETS[provider]
+    base_url = args.base_url or preset_base_url
+    model = args.model or preset_model
+
+    # Resolve API key: explicit arg > provider-specific env var > OPENAI_API_KEY
+    api_key = args.api_key
+    if not api_key:
+        if provider == "minimax":
+            api_key = os.environ.get("MINIMAX_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
+        else:
+            api_key = os.environ.get("OPENAI_API_KEY", "")
+
     system_instruction = get_system_instruction(args.cogview_version)
     user_assistant_pairs = get_user_assistant_pairs(args.cogview_version)
     prompt_enhanced = convert_prompt(
-        api_key=args.api_key,
-        base_url=args.base_url,
+        api_key=api_key,
+        base_url=base_url,
         prompt=args.prompt,
-        model=args.model,
+        model=model,
         system_instruction=system_instruction,
         user_assistant_pairs=user_assistant_pairs,
     )

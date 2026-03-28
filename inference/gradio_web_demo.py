@@ -1,34 +1,39 @@
-"""
+“””
 This script demonstrates how to generate an image using the CogView4-6B model within the Hugging Face Space interface. Simply interact with the Gradio interface hosted on Hugging Face CogView4 Demo at [CogView4-6B Hugging Face Space](https://huggingface.co/spaces/THUDM-HF-SPACE/CogView4)
 
 Running the Script:
 To run the script, use the following command with appropriate arguments:
 
 ```bash
-OPENAI_API_KEY="your ZhipuAI API keys" OPENAI_BASE_URL="https://open.bigmodel.cn/api/paas/v4" python gradio_web_demo.py
+OPENAI_API_KEY=”your ZhipuAI API keys” OPENAI_BASE_URL=”https://open.bigmodel.cn/api/paas/v4” python gradio_web_demo.py
 ```
 
-We use [glm-4-plus](https://bigmodel.cn/dev/howuse/glm-4) as the large model for prompt refinement. You can also choose other large models, such as GPT-4o, for refinement.”
+We use [glm-4-plus](https://bigmodel.cn/dev/howuse/glm-4) as the large model for prompt refinement. You can also choose other large models, such as GPT-4o or MiniMax-M2.7, for refinement.”
+
+### Using MiniMax for prompt enhancement:
+```bash
+MINIMAX_API_KEY=”your MiniMax API key” LLM_PROVIDER=minimax python gradio_web_demo.py
+```
 
 For Different GPU Memory Usage:
 
 12G VRAM
 ```
-MODE=1 OPENAI_API_KEY="your ZhipuAI API keys" OPENAI_BASE_URL="https://open.bigmodel.cn/api/paas/v4" python gradio_web_demo.py
+MODE=1 OPENAI_API_KEY=”your ZhipuAI API keys” OPENAI_BASE_URL=”https://open.bigmodel.cn/api/paas/v4” python gradio_web_demo.py
 ```
 24G VRAM 32G RAM
 ```
-MODE=2 OPENAI_API_KEY="your ZhipuAI API keys" OPENAI_BASE_URL="https://open.bigmodel.cn/api/paas/v4" python gradio_web_demo.py
+MODE=2 OPENAI_API_KEY=”your ZhipuAI API keys” OPENAI_BASE_URL=”https://open.bigmodel.cn/api/paas/v4” python gradio_web_demo.py
 ```
 24G VRAM 64G RAM
 ```
-MODE=3 OPENAI_API_KEY="your ZhipuAI API keys" OPENAI_BASE_URL="https://open.bigmodel.cn/api/paas/v4" python gradio_web_demo.py
+MODE=3 OPENAI_API_KEY=”your ZhipuAI API keys” OPENAI_BASE_URL=”https://open.bigmodel.cn/api/paas/v4” python gradio_web_demo.py
 ```
 40G VRAM 64G RAM and Larger
 ```
-OPENAI_API_KEY="your ZhipuAI API keys" OPENAI_BASE_URL="https://open.bigmodel.cn/api/paas/v4" python gradio_web_demo.py
+OPENAI_API_KEY=”your ZhipuAI API keys” OPENAI_BASE_URL=”https://open.bigmodel.cn/api/paas/v4” python gradio_web_demo.py
 ```
-"""
+“””
 
 import gc
 import os
@@ -45,6 +50,8 @@ from diffusers.models import CogView4Transformer2DModel
 from openai import OpenAI
 from torchao.quantization import int8_weight_only, quantize_
 from transformers import GlmModel
+
+from prompt_optimize import PROVIDER_PRESETS
 
 
 total_vram_in_gb = torch.cuda.get_device_properties(0).total_memory / 1073741824
@@ -64,6 +71,7 @@ else:
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model_path = "THUDM/CogView4-6B"
 mode = os.environ.get("MODE", "0")
+llm_provider = os.environ.get("LLM_PROVIDER", "zhipu")
 
 text_encoder = None
 transformer = None
@@ -97,13 +105,39 @@ def clean_string(s):
 def convert_prompt(
     prompt: str,
     key: str,
+    provider: str = "zhipu",
     retry_times: int = 5,
 ) -> str:
-    os.environ["OPENAI_API_KEY"] = key
-    if not key:
+    # Resolve provider preset
+    preset_base_url, preset_model = PROVIDER_PRESETS.get(provider, PROVIDER_PRESETS["zhipu"])
+
+    # For zhipu provider, honor OPENAI_BASE_URL env var for backwards compatibility
+    if provider == "zhipu":
+        base_url = os.environ.get("OPENAI_BASE_URL", preset_base_url)
+        model = "glm-4-flash"
+    else:
+        base_url = preset_base_url
+        model = preset_model
+
+    # Resolve API key
+    if key:
+        api_key = key
+    elif provider == "minimax":
+        api_key = os.environ.get("MINIMAX_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
+    else:
+        api_key = os.environ.get("OPENAI_API_KEY", "")
+
+    if not api_key:
         return prompt
-    client = OpenAI()
+
+    client = OpenAI(api_key=api_key, base_url=base_url)
     prompt = clean_string(prompt)
+
+    # MiniMax requires temperature in (0.0, 1.0]
+    temperature = 0.01
+    if "minimax" in base_url.lower():
+        temperature = max(temperature, 0.01)
+
     for i in range(retry_times):
         try:
             response = client.chat.completions.create(
@@ -149,8 +183,8 @@ def convert_prompt(
                         "content": f"Create an imaginative image descriptive caption for the user input : {prompt}",
                     },
                 ],
-                model="glm-4-flash",
-                temperature=0.01,
+                model=model,
+                temperature=temperature,
                 top_p=0.7,
                 stream=False,
                 max_tokens=300,
@@ -274,6 +308,11 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                         type="password",
                         max_lines=1,
                     )
+                    provider = gr.Dropdown(
+                        label="LLM Provider",
+                        choices=list(PROVIDER_PRESETS.keys()),
+                        value=llm_provider,
+                    )
                 with gr.Row():
                     seed = gr.Slider(
                         label="Seed",
@@ -317,7 +356,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as demo:
                 result = gr.Gallery(label="Results", show_label=True)
 
         MAX_PIXELS = 2**21
-        enhance.click(convert_prompt, inputs=[prompt, key], outputs=[prompt])
+        enhance.click(convert_prompt, inputs=[prompt, key, provider], outputs=[prompt])
         width.change(update_max_height, inputs=[width], outputs=[height])
         height.change(update_max_width, inputs=[height], outputs=[width])
 

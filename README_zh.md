@@ -154,10 +154,23 @@ DIT模型均使用 `BF16` 精度,  `batchsize=4` 进行测试，测试结果如�
 我们提供了一个 [示例脚本](inference/prompt_optimize.py)。我们建议您运行这个脚本，以实现对提示词对润色。请注意，`CogView4` 和
 `CogView3` 模型的提示词优化使用的few shot不同。需要区分。
 
+使用智谱AI（默认）：
+
 ```shell
 cd inference
 python prompt_optimize.py --api_key "智谱AI API Key" --prompt {你的提示词} --base_url "https://open.bigmodel.cn/api/paas/v4" --model "glm-4-plus" --cogview_version "cogview4"
 ```
+
+使用 [MiniMax](https://www.minimax.io/)（替代方案）：
+
+```shell
+cd inference
+python prompt_optimize.py --provider minimax --api_key "MiniMax API Key" --prompt {你的提示词} --cogview_version "cogview4"
+# 也可以通过环境变量设置：
+MINIMAX_API_KEY="your key" python prompt_optimize.py --provider minimax --prompt {你的提示词} --cogview_version "cogview4"
+```
+
+你也可以使用 `--provider openai` 来选择 OpenAI GPT-4o，或直接指定任意 `--base_url` 和 `--model`。
 
 ### 推理模型
 

@@ -154,10 +154,23 @@ We provide an [example script](inference/prompt_optimize.py). We recommend runni
 Note that `CogView4` and `CogView3` models use different few-shot examples for prompt optimization. They need to be
 distinguished.
 
+Using Zhipu AI (default):
+
 ```shell
 cd inference
 python prompt_optimize.py --api_key "Zhipu AI API Key" --prompt {your prompt} --base_url "https://open.bigmodel.cn/api/paas/v4" --model "glm-4-plus" --cogview_version "cogview4"
 ```
+
+Using [MiniMax](https://www.minimax.io/) (alternative):
+
+```shell
+cd inference
+python prompt_optimize.py --provider minimax --api_key "MiniMax API Key" --prompt {your prompt} --cogview_version "cogview4"
+# Or set the environment variable:
+MINIMAX_API_KEY="your key" python prompt_optimize.py --provider minimax --prompt {your prompt} --cogview_version "cogview4"
+```
+
+You can also use `--provider openai` for OpenAI GPT-4o, or specify any custom `--base_url` and `--model` directly.
 
 ### Inference Model
 
